@@ -203,26 +203,41 @@ function renderNewPeople() {
     return;
   }
 
+  const companyOptions = config.companies
+    .filter(c => c.name.trim())
+    .map(c => `<option value="${escapeAttr(c.name)}">${escapeHtml(c.name)}</option>`)
+    .join("");
+
   state.newPeople.forEach((item, index) => {
     const row = document.createElement("div");
     row.className = "new-row";
+
     row.innerHTML = `
-      <input class="input" type="text" placeholder="업체명" value="${escapeAttr(item.company)}">
+      <select class="select company-select">
+        <option value="">업체 선택</option>
+        ${companyOptions}
+      </select>
       <input class="input" type="text" placeholder="이름" value="${escapeAttr(item.name)}">
       <button class="delete-row" aria-label="삭제">×</button>
     `;
 
-    const inputs = row.querySelectorAll("input");
-    inputs[0].addEventListener("input", e => {
+    const companySelect = row.querySelector(".company-select");
+    const nameInput = row.querySelector("input");
+
+    companySelect.value = item.company || "";
+
+    companySelect.addEventListener("change", e => {
       state.newPeople[index].company = e.target.value;
       saveTodayState();
       updatePreview();
     });
-    inputs[1].addEventListener("input", e => {
+
+    nameInput.addEventListener("input", e => {
       state.newPeople[index].name = e.target.value;
       saveTodayState();
       updatePreview();
     });
+
     row.querySelector(".delete-row").addEventListener("click", () => {
       state.newPeople.splice(index, 1);
       saveTodayState();
@@ -233,7 +248,6 @@ function renderNewPeople() {
     container.appendChild(row);
   });
 }
-
 function renderReasons() {
   const container = $("#reasonList");
   container.innerHTML = "";
@@ -397,14 +411,17 @@ function togglePreview() {
 }
 
 function addNewPerson() {
-  state.newPeople.push({ company: "", name: "" });
+  state.newPeople.push({
+    company: config.companies[0]?.name || "",
+    name: ""
+  });
   saveTodayState();
   renderNewPeople();
   updatePreview();
 
   setTimeout(() => {
     const inputs = document.querySelectorAll("#newPeopleList input");
-    inputs[inputs.length - 2]?.focus();
+    inputs[inputs.length - 1]?.focus();
   }, 50);
 }
 

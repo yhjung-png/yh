@@ -243,7 +243,7 @@ main {
 .new-row,
 .reason-row {
   display: grid;
-  grid-template-columns: 1fr 110px 42px;
+  grid-template-columns: 1fr 1fr 42px;
   gap: 7px;
   margin-bottom: 8px;
 }
@@ -538,7 +538,7 @@ main {
     grid-template-columns: 1fr;
   }
   .new-row {
-    grid-template-columns: 1fr 95px 40px;
+    grid-template-columns: 1fr 1fr 40px;
   }
   .reason-row {
     grid-template-columns: 1fr 110px 40px;
