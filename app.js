@@ -374,7 +374,26 @@ function buildReport() {
 }
 
 function updatePreview() {
-  $("#previewText").value = buildReport();
+  // 미리보기 영역이 열려 있을 때만 화면 내용을 갱신합니다.
+  // 복사 기능은 이 값에 의존하지 않고 buildReport()를 직접 호출합니다.
+  const area = $("#previewArea");
+  if (!area.classList.contains("hidden")) {
+    $("#previewText").value = buildReport();
+  }
+}
+
+function togglePreview() {
+  const area = $("#previewArea");
+  const button = $("#previewBtn");
+
+  area.classList.toggle("hidden");
+
+  if (area.classList.contains("hidden")) {
+    button.textContent = "👁 미리보기";
+  } else {
+    $("#previewText").value = buildReport();
+    button.textContent = "▲ 미리보기 닫기";
+  }
 }
 
 function addNewPerson() {
@@ -536,21 +555,36 @@ function resetToday() {
 }
 
 async function copyReport() {
+  // 화면의 미리보기 textarea를 절대로 복사하지 않습니다.
+  // 현재 출석/신규인원/결원사유 데이터를 기준으로 매번 새로 생성합니다.
   const text = buildReport();
 
   try {
     await navigator.clipboard.writeText(text);
     showCopySuccess();
   } catch {
+    // Clipboard API가 차단된 환경을 위한 fallback
     const textarea = $("#previewText");
+    const wasHidden = $("#previewArea").classList.contains("hidden");
+
+    if (wasHidden) {
+      $("#previewArea").classList.remove("hidden");
+    }
+
+    textarea.value = text;
     textarea.removeAttribute("readonly");
+    textarea.focus();
     textarea.select();
     document.execCommand("copy");
     textarea.setAttribute("readonly", "");
+
+    if (wasHidden) {
+      $("#previewArea").classList.add("hidden");
+    }
+
     showCopySuccess();
   }
 }
-
 function showCopySuccess() {
   const btn = $("#copyBtn");
   btn.textContent = "✓ 복사 완료";
@@ -599,6 +633,7 @@ function escapeAttr(value) {
 }
 
 $("#settingsBtn").addEventListener("click", openSettings);
+$("#previewBtn").addEventListener("click", togglePreview);
 $("#addNewBtn").addEventListener("click", addNewPerson);
 $("#addReasonBtn").addEventListener("click", addReason);
 $("#copyBtn").addEventListener("click", copyReport);
