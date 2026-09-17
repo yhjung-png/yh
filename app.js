@@ -110,16 +110,22 @@ function personId(companyIndex, personIndex) {
 }
 
 function splitNewNames(value) {
-  return String(value || "")
+  // 신규인원은 쉼표(,) 또는 모든 종류의 공백(스페이스/엔터/전각 공백)으로 구분합니다.
+  // 예: "커피 카피 코피" / "커피,카피,코피" / "커피, 카피 코피" -> 모두 3명
+  return String(value ?? "")
+    .replace(/[，、]/g, ",")
+    .replace(/\u00A0/g, " ")
     .trim()
-    .split(/[\s,]+/)
+    .split(/[\s,]+/u)
     .map(name => name.trim())
     .filter(Boolean);
 }
 
 function totalPeople() {
   const configuredTotal = config.companies.reduce((sum, c) => sum + c.people.length, 0);
-  const newPeopleTotal = state.newPeople.reduce((sum, x) => sum + splitNewNames(x.name).length, 0);
+  const newPeopleTotal = state.newPeople.reduce((sum, item) => {
+    return sum + splitNewNames(item?.name).length;
+  }, 0);
   return configuredTotal + newPeopleTotal;
 }
 
@@ -253,21 +259,13 @@ function renderNewPeople() {
     });
 
     const commitMultipleNames = () => {
+      // 입력값을 여러 행으로 재구성하지 않습니다.
+      // state에는 원문을 그대로 보관하고, 인원수/보고서에서 splitNewNames()로 계산합니다.
+      // 이렇게 해야 "커피 카피 코피"가 절대 1명으로 저장되지 않습니다.
       const value = nameInput.value.trim();
-      const names = splitNewNames(value);
-      const company = state.newPeople[index]?.company || config.companies[0]?.name || "";
-
-      if (names.length <= 1) {
-        state.newPeople[index].name = value;
-        saveTodayState();
-        updateSummary();
-        updatePreview();
-        return;
-      }
-
-      state.newPeople.splice(index, 1, ...names.map(name => ({ company, name })));
+      state.newPeople[index].name = value;
       saveTodayState();
-      renderNewPeople();
+      updateSummary();
       updatePreview();
     };
 
