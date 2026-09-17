@@ -54,11 +54,16 @@
       <section class="preview-card">
         <div class="section-title-row">
           <div>
-            <h2>보고내용 미리보기</h2>
-            <p>아래 내용이 그대로 복사됩니다.</p>
+            <h2>보고서</h2>
+            <p>필요할 때만 미리보기를 열어 확인할 수 있습니다.</p>
           </div>
+          <button class="small-btn" id="previewBtn">👁 미리보기</button>
         </div>
-        <textarea id="previewText" readonly></textarea>
+
+        <div id="previewArea" class="preview-area hidden">
+          <textarea id="previewText" readonly></textarea>
+        </div>
+
         <div class="action-row">
           <button class="secondary-btn" id="resetBtn">오늘 입력 초기화</button>
           <button class="copy-btn" id="copyBtn">📋 내용 복사</button>
