@@ -394,10 +394,32 @@ function buildReport() {
   lines.push("");
 
   if (absent.length) {
+    // 같은 업체 + 같은 결원사유는 한 줄로 묶어서 표시합니다.
+    // 예: FB : 이지훈, 김예빈 (휴무)
+    // 사유가 다르면 같은 업체라도 별도 줄로 표시합니다.
+    const groups = [];
+
     absent.forEach(person => {
       const reasonObj = state.reasons.find(r => r.id === person.id);
       const reason = reasonObj?.reason || "휴무";
-      lines.push(`${person.company} : ${person.name} (${reason})`);
+      const key = `${person.company}\u0000${reason}`;
+      let group = groups.find(g => g.key === key);
+
+      if (!group) {
+        group = {
+          key,
+          company: person.company,
+          reason,
+          names: []
+        };
+        groups.push(group);
+      }
+
+      group.names.push(person.name);
+    });
+
+    groups.forEach(group => {
+      lines.push(`${group.company} : ${group.names.join(", ")} (${group.reason})`);
     });
   } else {
     lines.push("결원 없음");
