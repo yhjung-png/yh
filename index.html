@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111827">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>풀필먼트2팀 인원보고</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">ATTENDANCE REPORT</div>
+        <h1>풀필먼트2팀 인원보고</h1>
+        <div id="todayText" class="date-text"></div>
+      </div>
+      <button class="icon-btn" id="settingsBtn" aria-label="설정">⚙️</button>
+    </header>
+
+    <main>
+      <section class="summary-card">
+        <div class="summary-item"><span>총원</span><strong id="totalCount">0</strong></div>
+        <div class="summary-item present"><span>현원</span><strong id="presentCount">0</strong></div>
+        <div class="summary-item absent"><span>결원</span><strong id="absentCount">0</strong></div>
+      </section>
+
+      <section id="companyList" class="company-list"></section>
+
+      <section class="section-card">
+        <div class="section-title-row">
+          <div>
+            <h2>신규인원</h2>
+            <p>신규 입사자나 추가 인원을 입력하세요.</p>
+          </div>
+          <button class="small-btn" id="addNewBtn">＋ 추가</button>
+        </div>
+        <div id="newPeopleList" class="new-people-list"></div>
+      </section>
+
+      <section class="section-card">
+        <div class="section-title-row">
+          <div>
+            <h2>결원사유</h2>
+            <p>결원자의 사유를 선택하거나 직접 입력하세요.</p>
+          </div>
+          <button class="small-btn" id="addReasonBtn">＋ 추가</button>
+        </div>
+        <div id="reasonList" class="reason-list"></div>
+      </section>
+
+      <section class="preview-card">
+        <div class="section-title-row">
+          <div>
+            <h2>보고내용 미리보기</h2>
+            <p>아래 내용이 그대로 복사됩니다.</p>
+          </div>
+        </div>
+        <textarea id="previewText" readonly></textarea>
+        <div class="action-row">
+          <button class="secondary-btn" id="resetBtn">오늘 입력 초기화</button>
+          <button class="copy-btn" id="copyBtn">📋 내용 복사</button>
+        </div>
+        <div id="copyMessage" class="copy-message"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- 설정 모달 -->
+  <div id="settingsModal" class="modal hidden">
+    <div class="modal-backdrop" data-close="settings"></div>
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <div>
+          <div class="eyebrow">SETTINGS</div>
+          <h2>업체 / 인원 설정</h2>
+        </div>
+        <button class="close-btn" data-close="settings">✕</button>
+      </div>
+
+      <div class="settings-help">
+        업체와 인원을 자유롭게 추가/삭제할 수 있습니다. 변경사항은 이 스마트폰의 브라우저에 자동 저장됩니다.
+      </div>
+
+      <div id="settingsCompanies"></div>
+
+      <button class="add-company-btn" id="addCompanyBtn">＋ 업체 추가</button>
+
+      <div class="settings-footer">
+        <button class="danger-outline-btn" id="restoreDefaultsBtn">기본값 복원</button>
+        <button class="primary-btn" id="saveSettingsBtn">저장하고 닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirmModal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="confirm-box">
+      <h3 id="confirmTitle">확인</h3>
+      <p id="confirmText"></p>
+      <div class="confirm-actions">
+        <button class="secondary-btn" id="confirmCancel">취소</button>
+        <button class="danger-btn" id="confirmOk">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
