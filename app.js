@@ -1,5 +1,5 @@
-const STORAGE_KEY = "fulfillment_attendance_config_v1";
-const TODAY_KEY = "fulfillment_attendance_today_v1";
+const STORAGE_KEY = "fulfillment2_team2_attendance_config_v1";
+const TODAY_KEY = "fulfillment2_team2_attendance_today_v1";
 
 const DEFAULT_CONFIG = {
   teamTitle: "풀필먼트2팀 운영2팀",
@@ -7,35 +7,35 @@ const DEFAULT_CONFIG = {
     {
       name: "FB",
       people: [
-        { name: "유기상", note: "" },
-        { name: "홍귀순", note: "" },
-        { name: "김예빈", note: "" },
-        { name: "진나윤", note: "" },
-        { name: "강혜원", note: "" },
-        { name: "이지훈", note: "" }
+        { name: "유기상" },
+        { name: "홍귀순" },
+        { name: "김예빈" },
+        { name: "진나윤" },
+        { name: "강혜원" },
+        { name: "이지훈" }
       ]
     },
     {
       name: "고은로지스탭",
       people: [
-        { name: "차은미", note: "" },
-        { name: "김미진", note: "" },
-        { name: "이소연", note: "" },
+        { name: "차은미" },
+        { name: "김미진" },
+        { name: "이소연" },
         { name: "최진혁", note: "지게차" }
       ]
     },
     {
       name: "포래인",
       people: [
-        { name: "박선민", note: "" }
+        { name: "박선민" }
       ]
     },
     {
       name: "더블유파트너스",
       people: [
-        { name: "윤민경", note: "" },
-        { name: "김진주", note: "" },
-        { name: "정용운", note: "" }
+        { name: "윤민경" },
+        { name: "김진주" },
+        { name: "정용운" }
       ]
     }
   ]
@@ -233,7 +233,40 @@ function renderNewPeople() {
     });
 
     nameInput.addEventListener("input", e => {
-      state.newPeople[index].name = e.target.value;
+      const value = e.target.value;
+
+      // 이름을 쉼표(,)로 구분하면 한 번에 여러 신규인원을 추가합니다.
+      if (value.includes(",")) {
+        const names = value
+          .split(",")
+          .map(name => name.trim())
+          .filter(Boolean);
+        const company = state.newPeople[index].company || config.companies[0]?.name || "";
+
+        if (names.length) {
+          state.newPeople.splice(
+            index,
+            1,
+            ...names.map(name => ({ company, name }))
+          );
+        } else {
+          state.newPeople[index].name = "";
+        }
+
+        saveTodayState();
+        renderNewPeople();
+        updatePreview();
+
+        setTimeout(() => {
+          const inputs = document.querySelectorAll("#newPeopleList input");
+          const target = inputs[Math.min(index + names.length - 1, inputs.length - 1)];
+          target?.focus();
+          target?.setSelectionRange(target.value.length, target.value.length);
+        }, 0);
+        return;
+      }
+
+      state.newPeople[index].name = value;
       saveTodayState();
       updatePreview();
     });
