@@ -109,9 +109,17 @@ function personId(companyIndex, personIndex) {
   return `${companyIndex}:${personIndex}`;
 }
 
+function splitNewNames(value) {
+  return String(value || "")
+    .trim()
+    .split(/[\s,]+/)
+    .map(name => name.trim())
+    .filter(Boolean);
+}
+
 function totalPeople() {
   const configuredTotal = config.companies.reduce((sum, c) => sum + c.people.length, 0);
-  const newPeopleTotal = state.newPeople.filter(x => x.name.trim()).length;
+  const newPeopleTotal = state.newPeople.reduce((sum, x) => sum + splitNewNames(x.name).length, 0);
   return configuredTotal + newPeopleTotal;
 }
 
@@ -239,28 +247,36 @@ function renderNewPeople() {
       // 여러 명 입력은 입력을 마친 뒤 포커스가 빠질 때(blur) 분리합니다.
       state.newPeople[index].name = e.target.value;
       saveTodayState();
+      // 입력 중에도 공백/쉼표 기준 신규인원 수를 즉시 다시 계산합니다.
+      updateSummary();
       updatePreview();
     });
 
-    nameInput.addEventListener("blur", e => {
-      const value = e.target.value.trim();
-      if (!value.includes(",")) return;
+    const commitMultipleNames = () => {
+      const value = nameInput.value.trim();
+      const names = splitNewNames(value);
+      const company = state.newPeople[index]?.company || config.companies[0]?.name || "";
 
-      const names = value
-        .split(",")
-        .map(name => name.trim())
-        .filter(Boolean);
-      const company = state.newPeople[index].company || config.companies[0]?.name || "";
-
-      if (names.length) {
-        state.newPeople.splice(
-          index,
-          1,
-          ...names.map(name => ({ company, name }))
-        );
+      if (names.length <= 1) {
+        state.newPeople[index].name = value;
         saveTodayState();
-        renderNewPeople();
+        updateSummary();
         updatePreview();
+        return;
+      }
+
+      state.newPeople.splice(index, 1, ...names.map(name => ({ company, name })));
+      saveTodayState();
+      renderNewPeople();
+      updatePreview();
+    };
+
+    nameInput.addEventListener("blur", commitMultipleNames);
+    nameInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        commitMultipleNames();
+        nameInput.blur();
       }
     });
 
@@ -363,29 +379,29 @@ function buildReport() {
   lines.push(`#${config.teamTitle} 인원보고`);
   lines.push("");
 
-  config.companies.forEach((company, ci) => {
+  config.companies.forEach((company) => {
     lines.push(`- ${company.name} (${company.people.length}명)`);
     const names = company.people.map(p => `${p.name}${p.note ? `(${p.note})` : ""}`);
     lines.push(names.join(" "));
     lines.push("");
   });
 
-  if (state.newPeople.length) {
-    const valid = state.newPeople.filter(x => x.name.trim());
-    lines.push(`-신규인원 (${valid.length}명)`);
-    if (valid.length) {
-      const groups = {};
-      valid.forEach(x => {
-        const company = x.company.trim() || "미지정";
-        const name = x.name.trim();
-        if (!name) return;
-        if (!groups[company]) groups[company] = [];
-        groups[company].push(name);
-      });
-      Object.entries(groups).forEach(([company, names]) => {
-        lines.push(`${company} : ${names.join(", ")}`);
-      });
-    }
+  const validNewPeople = state.newPeople
+    .flatMap(x => splitNewNames(x.name).map(name => ({ company: x.company, name })));
+  if (validNewPeople.length) {
+    lines.push(`-신규인원 (${validNewPeople.length}명)`);
+
+    const newGroups = new Map();
+    validNewPeople.forEach(x => {
+      const company = (x.company || "").trim() || "미지정";
+      const name = x.name.trim();
+      if (!newGroups.has(company)) newGroups.set(company, []);
+      newGroups.get(company).push(name);
+    });
+
+    newGroups.forEach((names, company) => {
+      lines.push(`${company} : ${names.join(", ")}`);
+    });
     lines.push("");
   }
 
@@ -394,31 +410,27 @@ function buildReport() {
   lines.push("");
 
   if (absent.length) {
-    // 같은 업체 + 같은 결원사유는 한 줄로 묶어서 표시합니다.
+    // 업체 + 결원사유가 같은 사람들을 하나의 줄로 묶습니다.
     // 예: FB : 이지훈, 김예빈 (휴무)
-    // 사유가 다르면 같은 업체라도 별도 줄로 표시합니다.
-    const groups = [];
+    // 사유가 다르면 같은 업체라도 별도의 줄로 표시합니다.
+    const reasonGroups = new Map();
 
     absent.forEach(person => {
-      const reasonObj = state.reasons.find(r => r.id === person.id);
-      const reason = reasonObj?.reason || "휴무";
+      const reasonRecord = state.reasons.find(r => r.id === person.id);
+      const reason = (reasonRecord?.reason || "휴무").trim();
       const key = `${person.company}\u0000${reason}`;
-      let group = groups.find(g => g.key === key);
 
-      if (!group) {
-        group = {
-          key,
+      if (!reasonGroups.has(key)) {
+        reasonGroups.set(key, {
           company: person.company,
           reason,
           names: []
-        };
-        groups.push(group);
+        });
       }
-
-      group.names.push(person.name);
+      reasonGroups.get(key).names.push(person.name);
     });
 
-    groups.forEach(group => {
+    reasonGroups.forEach(group => {
       lines.push(`${group.company} : ${group.names.join(", ")} (${group.reason})`);
     });
   } else {
@@ -429,7 +441,6 @@ function buildReport() {
   const total = totalPeople();
   const absentCount = absent.length;
   const present = total - absentCount;
-
   lines.push(`- 총 ${total}명 / 현 ${present}명 / 결 ${absentCount}명`);
 
   return lines.join("\n");
