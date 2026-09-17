@@ -289,6 +289,14 @@ main {
   padding: 15px;
 }
 
+.preview-area {
+  margin-bottom: 10px;
+}
+
+.preview-area.hidden {
+  display: none;
+}
+
 #previewText {
   display: block;
   width: 100%;
