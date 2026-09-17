@@ -235,42 +235,33 @@ function renderNewPeople() {
     });
 
     nameInput.addEventListener("input", e => {
-      const value = e.target.value;
+      // 입력 중에는 쉼표를 그대로 허용합니다.
+      // 여러 명 입력은 입력을 마친 뒤 포커스가 빠질 때(blur) 분리합니다.
+      state.newPeople[index].name = e.target.value;
+      saveTodayState();
+      updatePreview();
+    });
 
-      // 이름을 쉼표(,)로 구분하면 한 번에 여러 신규인원을 추가합니다.
-      if (value.includes(",")) {
-        const names = value
-          .split(",")
-          .map(name => name.trim())
-          .filter(Boolean);
-        const company = state.newPeople[index].company || config.companies[0]?.name || "";
+    nameInput.addEventListener("blur", e => {
+      const value = e.target.value.trim();
+      if (!value.includes(",")) return;
 
-        if (names.length) {
-          state.newPeople.splice(
-            index,
-            1,
-            ...names.map(name => ({ company, name }))
-          );
-        } else {
-          state.newPeople[index].name = "";
-        }
+      const names = value
+        .split(",")
+        .map(name => name.trim())
+        .filter(Boolean);
+      const company = state.newPeople[index].company || config.companies[0]?.name || "";
 
+      if (names.length) {
+        state.newPeople.splice(
+          index,
+          1,
+          ...names.map(name => ({ company, name }))
+        );
         saveTodayState();
         renderNewPeople();
         updatePreview();
-
-        setTimeout(() => {
-          const inputs = document.querySelectorAll("#newPeopleList input");
-          const target = inputs[Math.min(index + names.length - 1, inputs.length - 1)];
-          target?.focus();
-          target?.setSelectionRange(target.value.length, target.value.length);
-        }, 0);
-        return;
       }
-
-      state.newPeople[index].name = value;
-      saveTodayState();
-      updatePreview();
     });
 
     row.querySelector(".delete-row").addEventListener("click", () => {
