@@ -110,7 +110,9 @@ function personId(companyIndex, personIndex) {
 }
 
 function totalPeople() {
-  return config.companies.reduce((sum, c) => sum + c.people.length, 0);
+  const configuredTotal = config.companies.reduce((sum, c) => sum + c.people.length, 0);
+  const newPeopleTotal = state.newPeople.filter(x => x.name.trim()).length;
+  return configuredTotal + newPeopleTotal;
 }
 
 function isPresent(id) {
@@ -378,7 +380,7 @@ function buildReport() {
   });
 
   if (state.newPeople.length) {
-    const valid = state.newPeople.filter(x => x.company.trim() || x.name.trim());
+    const valid = state.newPeople.filter(x => x.name.trim());
     lines.push(`-신규인원 (${valid.length}명)`);
     if (valid.length) {
       const groups = {};
@@ -411,7 +413,7 @@ function buildReport() {
   }
 
   lines.push("");
-  const total = totalPeople() + state.newPeople.filter(x => x.name.trim()).length;
+  const total = totalPeople();
   const absentCount = absent.length;
   const present = total - absentCount;
 
